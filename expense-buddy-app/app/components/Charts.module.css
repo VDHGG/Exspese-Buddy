@@ -1,0 +1,165 @@
+.container {
+  animation: fadeInUp 0.4s ease both;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.chartCard {
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.woodAccent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg,
+    #B89768,
+    #D4B896,
+    #10B981,
+    #D4B896,
+    #B89768
+  );
+  border-radius: 16px 16px 0 0;
+}
+
+.chartTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2A1F14;
+  margin-bottom: 16px;
+  margin-top: 4px;
+}
+
+/* Donut */
+.donutContainer {
+  position: relative;
+}
+.donutCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  text-align: center;
+  pointer-events: none;
+}
+.donutCenterLabel {
+  display: block;
+  font-size: 0.7rem;
+  color: #9A7B4F;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.donutCenterValue {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2A1F14;
+  margin-top: 2px;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.legendName {
+  flex: 1;
+  font-size: 0.82rem;
+  color: #5C4A30;
+  font-weight: 500;
+}
+.legendValue {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #2A1F14;
+}
+
+/* Tooltip */
+.tooltip {
+  background: white;
+  border: 1px solid #E8D5B8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 12px rgba(61, 50, 32, 0.12);
+}
+.tooltipName {
+  font-size: 0.78rem;
+  color: #7D6340;
+  margin-bottom: 2px;
+}
+.tooltipValue {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2A1F14;
+}
+
+/* Member summary */
+.memberSummary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+.memberCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #FFF8F0;
+  border-radius: 10px;
+  border: 1px solid #F5EBD9;
+}
+.memberAvatar {
+  font-size: 1.4rem;
+}
+.memberName {
+  display: block;
+  font-size: 0.75rem;
+  color: #7D6340;
+  font-weight: 500;
+}
+.memberAmount {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2A1F14;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .memberSummary {
+    grid-template-columns: 1fr;
+  }
+}

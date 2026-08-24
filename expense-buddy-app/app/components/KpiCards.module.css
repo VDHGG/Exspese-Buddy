@@ -1,0 +1,104 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.card {
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 2px 8px rgba(61, 50, 32, 0.06);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.card:hover {
+  box-shadow: 0 8px 24px rgba(61, 50, 32, 0.1);
+  transform: translateY(-2px);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.iconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #5C4A30;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #2A1F14;
+  letter-spacing: -0.02em;
+  animation: countUp 0.4s ease both;
+}
+
+/* Budget progress */
+.progressContainer {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.progressTrack {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.safe { background: linear-gradient(90deg, #10B981, #34D399); }
+.warning { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+.danger { background: linear-gradient(90deg, #F43F5E, #FB7185); }
+
+.progressLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.safeText { color: #059669; }
+.warningText { color: #D97706; }
+.dangerText { color: #E11D48; }
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .value {
+    font-size: 1.2rem;
+  }
+}

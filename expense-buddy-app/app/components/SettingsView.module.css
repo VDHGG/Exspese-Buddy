@@ -1,0 +1,85 @@
+.container {
+  animation: fadeInUp 0.4s ease both;
+}
+
+.title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #2A1F14;
+  margin-bottom: 24px;
+}
+
+.section {
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.sectionHeader h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2A1F14;
+}
+
+.desc {
+  font-size: 0.85rem;
+  color: #7D6340;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.budgetRow {
+  display: flex;
+  gap: 10px;
+}
+.budgetRow .input {
+  max-width: 300px;
+}
+
+.actionRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dangerSection {
+  border-color: #FFE4E6;
+}
+
+.confirmRow {
+  padding: 14px 16px;
+  background: #FFF1F2;
+  border-radius: 10px;
+}
+.confirmText {
+  font-size: 0.85rem;
+  color: #E11D48;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.confirmBtns {
+  display: flex;
+  gap: 8px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .budgetRow {
+    flex-direction: column;
+  }
+  .budgetRow .input {
+    max-width: 100%;
+  }
+  .actionRow {
+    flex-direction: column;
+  }
+}

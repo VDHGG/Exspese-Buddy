@@ -1,0 +1,73 @@
+.container {
+  padding: 20px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.woodAccent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg,
+    #FBBF24,
+    #F59E0B,
+    #10B981,
+    #F59E0B,
+    #FBBF24
+  );
+  border-radius: 16px 16px 0 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  margin-top: 4px;
+}
+
+.header h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2A1F14;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insight {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: #3D3220;
+  font-weight: 500;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.info { background: #F5F3FF; }
+.info .dot { background: #8B5CF6; }
+
+.warning { background: #FFFBEB; }
+.warning .dot { background: #F59E0B; }
+
+.danger { background: #FFF1F2; }
+.danger .dot { background: #F43F5E; }
+
+.success { background: #ECFDF5; }
+.success .dot { background: #10B981; }
