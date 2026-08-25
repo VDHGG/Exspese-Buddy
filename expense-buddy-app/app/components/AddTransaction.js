@@ -23,6 +23,8 @@ export default function AddTransaction({ onAdd, onClose }) {
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [showSuccess, setShowSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const categories = CATEGORIES[type];
 
@@ -31,26 +33,33 @@ export default function AddTransaction({ onAdd, onClose }) {
     setAmount(raw);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!amount || !category || !member) return;
 
-    onAdd({
-      type,
-      amount: parseInt(amount, 10),
-      category,
-      member,
-      note,
-      date: new Date(date).toISOString(),
-    });
-
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      setAmount('');
-      setCategory('');
-      setNote('');
-    }, 1500);
+    setSubmitError('');
+    setIsSaving(true);
+    try {
+      await onAdd({
+        type,
+        amount: parseInt(amount, 10),
+        category,
+        member,
+        note,
+        date: new Date(date).toISOString(),
+      });
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setAmount('');
+        setCategory('');
+        setNote('');
+      }, 1500);
+    } catch (error) {
+      setSubmitError(error.message || 'Không thể lưu giao dịch.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const isValid = amount && parseInt(amount) > 0 && category && member;
@@ -72,6 +81,7 @@ export default function AddTransaction({ onAdd, onClose }) {
           <span>Đã lưu thành công!</span>
         </div>
       )}
+      {submitError && <div className={styles.errorBanner}>{submitError}</div>}
 
       <form onSubmit={handleSubmit} className={styles.form}>
         {/* Type toggle */}
@@ -184,10 +194,10 @@ export default function AddTransaction({ onAdd, onClose }) {
         <button
           type="submit"
           className={`btn ${type === 'expense' ? 'btn-danger' : 'btn-primary'} ${styles.submitBtn}`}
-          disabled={!isValid}
+          disabled={!isValid || isSaving}
         >
           <Plus size={18} />
-          {type === 'expense' ? 'Lưu khoản chi' : 'Lưu khoản thu'}
+          {isSaving ? 'Đang lưu…' : type === 'expense' ? 'Lưu khoản chi' : 'Lưu khoản thu'}
         </button>
       </form>
     </div>

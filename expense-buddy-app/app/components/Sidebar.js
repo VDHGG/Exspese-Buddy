@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, PlusCircle, BarChart3, List, Settings, Menu, X } from 'lucide-react';
+import { Home, PlusCircle, BarChart3, List, Settings, Menu, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import styles from './Sidebar.module.css';
 
@@ -12,25 +12,13 @@ const NAV_ITEMS = [
   { id: 'settings', label: 'Cài đặt', icon: Settings },
 ];
 
-export default function Sidebar({ activeView, onViewChange, remainingTTL }) {
+export default function Sidebar({ activeView, onViewChange, syncStatus, userEmail, onSignOut }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleNav = (id) => {
     onViewChange(id);
     setIsOpen(false);
   };
-
-  // Format remaining TTL
-  const formatTTL = (ms) => {
-    if (ms == null) return null;
-    const totalMin = Math.ceil(ms / 60000);
-    const h = Math.floor(totalMin / 60);
-    const m = totalMin % 60;
-    if (h > 0) return `${h}h ${m}p`;
-    return `${m}p`;
-  };
-
-  const ttlText = formatTTL(remainingTTL);
 
   return (
     <>
@@ -100,10 +88,9 @@ export default function Sidebar({ activeView, onViewChange, remainingTTL }) {
 
         {/* Footer */}
         <div className={styles.footer}>
-          <p>Dữ liệu lưu trên trình duyệt</p>
-          {ttlText && (
-            <p className={styles.ttlInfo}>Tự động xóa sau {ttlText}</p>
-          )}
+          <p className={styles.syncInfo}>{syncStatus === 'synced' ? '● Đã đồng bộ Supabase' : '● Đang đồng bộ dữ liệu'}</p>
+          <p className={styles.userEmail}>{userEmail}</p>
+          <button className={styles.signOut} onClick={onSignOut}><LogOut size={13} /> Đăng xuất</button>
         </div>
       </aside>
     </>

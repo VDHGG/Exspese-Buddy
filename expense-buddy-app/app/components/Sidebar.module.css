@@ -127,7 +127,7 @@
   opacity: 0.3;
   text-align: center;
 }
-.ttlInfo {
+.syncInfo {
   font-size: 0.65rem;
   color: #34D399;
   opacity: 0.7 !important;
@@ -135,6 +135,9 @@
   margin-top: 4px;
   font-weight: 500;
 }
+.userEmail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 4px; }
+.signOut { display: inline-flex; align-items: center; gap: 5px; margin: 10px auto 0; border: 0; background: transparent; color: rgba(255,255,255,.65); font: inherit; font-size: .68rem; cursor: pointer; }
+.signOut:hover { color: #fff; }
 
 /* Mobile toggle */
 .mobileToggle {

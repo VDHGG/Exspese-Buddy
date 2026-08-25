@@ -2,19 +2,30 @@
 
 import { useState } from 'react';
 import { RefreshCw, Download, Upload, Target, AlertTriangle } from 'lucide-react';
-import { formatCurrency, STORAGE_KEY, saveData } from '../lib/data';
+import { formatCurrency } from '../lib/data';
 import styles from './SettingsView.module.css';
 
-export default function SettingsView({ data, onUpdateBudget, onReset }) {
+export default function SettingsView({ data, onUpdateBudget, onReset, onImport }) {
   const [budgetInput, setBudgetInput] = useState(
     data?.monthlyBudget ? data.monthlyBudget.toString() : ''
   );
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [status, setStatus] = useState('');
 
-  const handleBudgetSave = () => {
+  const handleBudgetSave = async () => {
     const val = parseInt(budgetInput.replace(/[^\d]/g, ''), 10);
     if (val > 0) {
-      onUpdateBudget(val);
+      setIsSaving(true);
+      setStatus('');
+      try {
+        await onUpdateBudget(val);
+        setStatus('Đã cập nhật ngân sách.');
+      } catch (error) {
+        setStatus(error.message || 'Không thể cập nhật ngân sách.');
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -33,15 +44,17 @@ export default function SettingsView({ data, onUpdateBudget, onReset }) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const imported = JSON.parse(ev.target.result);
-        if (imported.transactions) {
-          saveData(imported);
-          window.location.reload();
-        }
-      } catch {
-        alert('File không hợp lệ!');
+        setIsSaving(true);
+        setStatus('');
+        const count = await onImport(imported);
+        setStatus(`Đã nhập ${count} giao dịch vào Supabase.`);
+      } catch (error) {
+        setStatus(error.message || 'File không hợp lệ.');
+      } finally {
+        setIsSaving(false);
       }
     };
     reader.readAsText(file);
@@ -69,8 +82,8 @@ export default function SettingsView({ data, onUpdateBudget, onReset }) {
             value={budgetInput ? parseInt(budgetInput).toLocaleString('vi-VN') : ''}
             onChange={(e) => setBudgetInput(e.target.value.replace(/[^\d]/g, ''))}
           />
-          <button className="btn btn-primary" onClick={handleBudgetSave}>
-            Lưu
+          <button className="btn btn-primary" onClick={handleBudgetSave} disabled={isSaving}>
+            {isSaving ? 'Đang lưu…' : 'Lưu'}
           </button>
         </div>
       </div>
@@ -82,20 +95,21 @@ export default function SettingsView({ data, onUpdateBudget, onReset }) {
           <h3>Sao lưu & Khôi phục</h3>
         </div>
         <p className={styles.desc}>
-          Xuất dữ liệu ra file JSON để sao lưu, hoặc nhập dữ liệu từ file đã lưu.
+          Xuất dữ liệu ra file JSON để sao lưu, hoặc nhập thêm giao dịch từ file đã lưu.
         </p>
         <div className={styles.actionRow}>
-          <button className="btn btn-ghost" onClick={handleExport}>
+          <button className="btn btn-ghost" onClick={handleExport} disabled={isSaving}>
             <Download size={16} />
             Xuất dữ liệu (JSON)
           </button>
-          <label className="btn btn-ghost" style={{ cursor: 'pointer' }}>
+          <label className="btn btn-ghost" style={{ cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.6 : 1 }}>
             <Upload size={16} />
             Nhập dữ liệu
             <input
               type="file"
               accept=".json"
               onChange={handleImport}
+              disabled={isSaving}
               style={{ display: 'none' }}
             />
           </label>
@@ -120,7 +134,19 @@ export default function SettingsView({ data, onUpdateBudget, onReset }) {
           <div className={styles.confirmRow}>
             <p className={styles.confirmText}>Bạn chắc chắn muốn xóa tất cả dữ liệu?</p>
             <div className={styles.confirmBtns}>
-              <button className="btn btn-danger btn-sm" onClick={() => { onReset(); setShowConfirm(false); }}>
+              <button className="btn btn-danger btn-sm" disabled={isSaving} onClick={async () => {
+                setIsSaving(true);
+                setStatus('');
+                try {
+                  await onReset();
+                  setStatus('Đã khôi phục dữ liệu mẫu.');
+                  setShowConfirm(false);
+                } catch (error) {
+                  setStatus(error.message || 'Không thể khôi phục dữ liệu mẫu.');
+                } finally {
+                  setIsSaving(false);
+                }
+              }}>
                 Xóa và reset
               </button>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowConfirm(false)}>
@@ -130,6 +156,7 @@ export default function SettingsView({ data, onUpdateBudget, onReset }) {
           </div>
         )}
       </div>
+      {status && <p className={styles.status}>{status}</p>}
     </div>
   );
 }

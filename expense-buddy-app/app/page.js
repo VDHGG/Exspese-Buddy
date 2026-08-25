@@ -10,6 +10,7 @@ import TransactionList from './components/TransactionList';
 import RecentTransactions from './components/RecentTransactions';
 import BuddyInsights from './components/BuddyInsights';
 import SettingsView from './components/SettingsView';
+import AuthGate from './components/AuthGate';
 import { formatMonthYear } from './lib/data';
 import styles from './page.module.css';
 
@@ -19,11 +20,17 @@ export default function Home() {
     data,
     stats,
     isLoaded,
-    remainingTTL,
     addTransaction,
     deleteTransaction,
     updateBudget,
     resetData,
+    user,
+    syncStatus,
+    error,
+    isSupabaseConfigured,
+    signInWithEmail,
+    signOut,
+    importData,
   } = useExpenseData();
 
   if (!isLoaded) {
@@ -33,6 +40,10 @@ export default function Home() {
         <p>Đang tải Expense Buddy...</p>
       </div>
     );
+  }
+
+  if (!user) {
+    return <AuthGate configured={isSupabaseConfigured} onSignIn={signInWithEmail} />;
   }
 
   const renderView = () => {
@@ -78,9 +89,7 @@ export default function Home() {
           <div className={styles.viewContainer}>
             <div className={`card ${styles.addCard}`}>
               <AddTransaction
-                onAdd={(t) => {
-                  addTransaction(t);
-                }}
+                onAdd={addTransaction}
                 onClose={() => setActiveView('dashboard')}
               />
             </div>
@@ -109,6 +118,7 @@ export default function Home() {
               data={data}
               onUpdateBudget={updateBudget}
               onReset={resetData}
+              onImport={importData}
             />
           </div>
         );
@@ -120,8 +130,15 @@ export default function Home() {
 
   return (
     <div className={styles.appLayout}>
-      <Sidebar activeView={activeView} onViewChange={setActiveView} remainingTTL={remainingTTL} />
+      <Sidebar
+        activeView={activeView}
+        onViewChange={setActiveView}
+        syncStatus={syncStatus}
+        userEmail={user.email}
+        onSignOut={signOut}
+      />
       <main className={styles.mainContent}>
+        {error && <p className={styles.syncError}>Lỗi đồng bộ: {error}</p>}
         {renderView()}
       </main>
     </div>
