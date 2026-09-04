@@ -30,7 +30,7 @@ export default function Home() {
     syncStatus,
     error,
     isSupabaseConfigured,
-    signInWithEmail,
+    signInWithPassword,
     signOut,
     importData,
     updateCategories,
@@ -47,7 +47,7 @@ export default function Home() {
   }
 
   if (!user) {
-    return <AuthGate configured={isSupabaseConfigured} onSignIn={signInWithEmail} />;
+    return <AuthGate configured={isSupabaseConfigured} onSignIn={signInWithPassword} />;
   }
 
   const categories = data?.categories;

@@ -139,6 +139,11 @@ export function useExpenseData() {
     return () => { mounted = false; subscription.unsubscribe(); };
   }, [loadCloudData]);
 
+  const signInWithPassword = useCallback(async (email, password) => {
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    return signInError?.message || null;
+  }, []);
+
   const signInWithEmail = useCallback(async (email) => {
     const { error: signInError } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } });
     return signInError?.message || null;
@@ -332,6 +337,7 @@ export function useExpenseData() {
     syncStatus,
     error,
     isSupabaseConfigured,
+    signInWithPassword,
     signInWithEmail,
     signOut,
     addTransaction,
