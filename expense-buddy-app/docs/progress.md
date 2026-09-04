@@ -27,6 +27,9 @@
 | Tích hợp thông báo Telegram Bot JAVIS | ✅ Done | 2026-09-04 |
 | Trợ lý tài chính AI thông minh (Gemini 2.5 Flash) | ✅ Done | 2026-09-04 |
 | Deep review, reliability & bug fixes | ✅ Done | 2026-09-04 |
+| Email + Password Auth (thay thế Magic Link) | ✅ Done | 2026-09-04 |
+| Tích hợp payOS VietQR & Webhook Realtime | ✅ Done | 2026-09-04 |
+| Supabase Realtime (auto-update Dashboard) | ✅ Done | 2026-09-04 |
 
 ---
 

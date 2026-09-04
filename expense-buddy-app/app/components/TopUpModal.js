@@ -97,6 +97,8 @@ export default function TopUpModal({ isOpen, onClose, user, onPaymentSuccess }) 
     setPaymentData(null);
     setIsPaid(false);
     setError('');
+    setAmount(50000);
+    setCustomAmount('');
     onClose();
   };
 

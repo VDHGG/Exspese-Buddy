@@ -21,11 +21,12 @@ export async function POST(req) {
       );
     }
 
-    // Generate unique orderCode (timestamp in seconds + 2 random digits, safe integer)
-    const orderCode = Math.floor(Date.now() / 1000) * 100 + Math.floor(Math.random() * 100);
+    // Generate unique orderCode: last 6 digits of epoch seconds + 2 random digits (safe 8-digit int)
+    const epochSuffix = Math.floor(Date.now() / 1000) % 1000000;
+    const orderCode = epochSuffix * 100 + Math.floor(Math.random() * 100);
 
     // payOS requires description <= 25 characters
-    const description = `Nap quy #${orderCode}`.slice(0, 25);
+    const description = `Nap quy ${orderCode}`.slice(0, 25);
 
     // Base origin for return/cancel URLs
     const host = req.headers.get('host') || 'localhost:3000';
