@@ -41,3 +41,22 @@ create policy "Users manage own budget"
 on public.budgets for all to authenticated
 using (user_id = auth.uid())
 with check (user_id = auth.uid());
+
+-- Bảng cài đặt cá nhân hóa của từng user (danh mục tùy biến, thành viên gia đình, config mở rộng)
+create table if not exists public.user_settings (
+  user_id uuid primary key default auth.uid() references auth.users(id) on delete cascade,
+  categories jsonb not null default '{}'::jsonb,
+  family_members jsonb not null default '[]'::jsonb,
+  telegram_config jsonb default '{"enabled": false, "bot_token": "", "chat_id": ""}'::jsonb,
+  gemini_config jsonb default '{"enabled": false, "api_key": "", "model": "gemini-2.5-flash"}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.user_settings enable row level security;
+grant select, insert, update, delete on public.user_settings to authenticated;
+
+drop policy if exists "Users manage own settings" on public.user_settings;
+create policy "Users manage own settings"
+on public.user_settings for all to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());

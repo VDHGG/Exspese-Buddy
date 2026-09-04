@@ -1,8 +1,8 @@
-﻿# 📈 Progress Log
+# 📈 Progress Log
 # Expense Buddy — Nhật ký tiến độ phát triển
 
-> Cập nhật lần cuối: **2026-08-26**
-> Trạng thái hiện tại: **MVP Live ✅** — Production tại https://expense-buddy-app.vercel.app
+> Cập nhật lần cuối: **2026-09-04**
+> Trạng thái hiện tại: **v1.1 Live ✅** — Tích hợp Telegram Bot JAVIS & Gemini AI Assistant
 
 ---
 
@@ -21,6 +21,11 @@
 | Production deploy (Vercel) | ✅ Done | 2026-08-25 |
 | Bug fix: Supabase Site URL config | ✅ Done | 2026-08-26 |
 | Tài liệu dự án (docs/) | ✅ Done | 2026-08-26 |
+| Chỉnh sửa giao dịch (Edit Transaction Modal) | ✅ Done | 2026-09-04 |
+| Quản lý danh mục & thành viên tùy chỉnh | ✅ Done | 2026-09-04 |
+| Tích hợp thông báo Telegram Bot JAVIS | ✅ Done | 2026-09-04 |
+| Trợ lý tài chính AI thông minh (Gemini 2.5 Flash) | ✅ Done | 2026-09-04 |
+| Deep review, reliability & bug fixes | ✅ Done | 2026-09-04 |
 
 ---
 
@@ -133,17 +138,59 @@
 
 ---
 
+### 📅 2026-09-04 — Sprint 4: Transaction Editing, Customization, Telegram Bot & Gemini Chatbot
+
+#### Chỉnh sửa giao dịch (Transaction Editing)
+- [x] Component `EditTransactionModal.js` với giao diện modal chỉnh sửa trực quan (chuyển đổi Thu/Chi, đổi danh mục linh hoạt, chọn thành viên, nhập số tiền, đổi ngày và ghi chú).
+- [x] Tích hợp nút chỉnh sửa (icon `Pencil`) trong cả danh sách `TransactionList.js` và bảng 10 giao dịch gần nhất `RecentTransactions.js`.
+- [x] Hàm `onEdit` trong `useExpenseData.js` đồng bộ cập nhật lên Supabase Postgres table `transactions`, fallback cập nhật `localStorage` khi offline.
+- [x] Chuẩn hóa ngày giờ sang múi giờ Việt Nam `Asia/Ho_Chi_Minh` (`+07:00`) tránh lỗi trôi ngày khi edit.
+
+#### Quản lý danh mục & thành viên gia đình tùy chỉnh
+- [x] Mở rộng tab **Cài đặt** (`SettingsView.js`) với giao diện quản lý trực quan:
+  - Thêm / Xóa danh mục chi tiêu và danh mục thu nhập kèm chọn icon Lucide và mã màu tùy ý.
+  - Thêm / Xóa thành viên gia đình kèm avatar chữ viết tắt và bảng màu đa dạng.
+- [x] Tích hợp đồng bộ Supabase qua bảng `user_settings` (cột `categories` JSONB và `family_members` JSONB) kèm fallback localStorage / defaults trong `data.js`.
+- [x] Cơ chế đồng bộ bảo toàn dữ liệu: luôn upsert cả 2 trường `categories` và `family_members` đồng thời để không bị reset cột chưa truyền về default trong Postgres.
+- [x] Cập nhật toàn bộ các views (`AddTransaction`, `EditTransactionModal`, `TransactionList`, `Charts`, `Sidebar`, `BuddyInsights`, `FloatingChatWidget`) phản ánh danh mục và thành viên tùy chỉnh mới nhất.
+
+#### Tích hợp thông báo tự động Telegram (Bot JAVIS)
+- [x] Thiết lập Bot Telegram `@Javisreport_bot` (token bot cấu hình an toàn trong `.env.local` / Vercel env).
+- [x] Tạo API server route an toàn: `/api/telegram/notify` (Next.js App Router POST handler) gửi thông báo tới nhóm Telegram chung (`-1003980067278`).
+- [x] Thiết kế mẫu thông báo HTML thân thiện, trực quan, không AI slop:
+  - Header với badge loại giao dịch (🔴 CHI TIÊU MỚI / 🟢 THU NHẬP MỚI / ✏️ CẬP NHẬT GIAO DỊCH).
+  - Định dạng số tiền nổi bật (VND), danh mục, người chi/thu, ghi chú và thời gian giao dịch.
+  - Footer tiến độ ngân sách tháng trực quan kèm thanh progress text (`[■■■■□□□□□□] 42%`).
+- [x] Smoke test live: Test thành công gửi thông báo trực tiếp vào nhóm **Buddy** (Message IDs: `2`, `3`).
+
+#### Trợ lý tài chính AI thông minh (Google Gemini 2.5 Flash)
+- [x] Tích hợp mô hình `gemini-2.5-flash` qua API server route `/api/chat` (sử dụng `GEMINI_API_KEY`).
+- [x] Component giao diện `FloatingChatWidget.js`: Nút widget tròn nổi góc dưới phải màn hình với animation mượt, cửa sổ chat bo góc glassmorphism cao cấp, gợi ý nhanh (quick prompts).
+- [x] Cung cấp system prompt thông minh nạp ngữ cảnh dữ liệu tài chính gia đình (tổng thu, chi, số dư, ngân sách tháng, danh mục và thành viên hiện tại).
+- [x] Tính năng bóc tách giao dịch tự nhiên (NLP): Cho phép người dùng nhập nhanh như *"Vừa đi ăn sáng hết 45k bố trả"* hoặc *"Lương tháng này 25tr mẹ"* -> Gemini tự động phân tích và tạo giao dịch tức thì vào hệ thống.
+- [x] Xây dựng bộ fuzzy matcher (`resolveCategory`, `resolveMember`) nhận diện linh hoạt keyword tiếng Việt/Anh, danh mục tùy biến và định dạng dữ liệu linh hoạt.
+
+#### Deep Review, Bug Fixes & Tối ưu hóa
+- [x] Loại bỏ side-effect bất đồng bộ ra khỏi React state updater trong `useExpenseData.js` (tránh gửi lặp tin nhắn Telegram khi React re-render).
+- [x] Khắc phục triệt để lỗi ghi đè dữ liệu Supabase `upsert` trên bảng `user_settings`.
+- [x] Bổ sung timeout (`AbortSignal.timeout`) và validation `.trim()` cho Telegram và Gemini API routes.
+- [x] Đồng bộ chuẩn hóa ngày giờ (`T12:00:00+07:00`) trong cả `AddTransaction.js` và `EditTransactionModal.js`.
+- [x] Bổ sung regex bóc tách JSON đa tầng trong `/api/chat/route.js` và `FloatingChatWidget.js`.
+
+---
+
 ## Metrics hiện tại
 
 | Metric | Giá trị |
 |--------|---------|
-| Lines of code (JS) | ~1,400 lines |
-| Lines of code (CSS) | ~515 lines globals + ~900 lines modules |
-| Components | 9 components |
+| Lines of code (JS) | ~2,500 lines |
+| Lines of code (CSS) | ~515 lines globals + ~1,500 lines modules |
+| Components | 11 components (+ EditTransactionModal, FloatingChatWidget) |
+| API Routes | 2 routes (`/api/telegram/notify`, `/api/chat`) |
 | Lib files | 3 files (data.js, supabase.js, useExpenseData.js) |
-| Supabase users (production) | 2 users đã xác thực |
+| Supabase tables | 3 tables (`transactions`, `budgets`, `user_settings`) |
 | Deploy time (Vercel) | ~45 giây |
-| Bundle size | ~280KB gzip (Recharts ~150KB) |
+| Bundle size | ~310KB gzip |
 
 ---
 
@@ -153,9 +200,9 @@
 |-------|--------|-----------|
 | Supabase Site URL phải set đúng production URL | 🔴 Critical | ✅ Đã có fix guide |
 | Free tier pause sau 1 tuần inactive | 🟡 Medium | ⏳ Chưa xử lý (nâng tier hoặc ping) |
-| Không có offline fallback khi mất mạng | 🟡 Medium | ⏳ Roadmap v1.1 |
+| Không có offline fallback khi mất mạng | 🟡 Medium | ⏳ Roadmap v1.2 |
 | Sidebar không nhớ collapse state | 🟢 Low | ⏳ Nice-to-have |
-| Import JSON không validate schema chặt | 🟡 Medium | ⏳ Roadmap v1.1 |
+| Import JSON không validate schema chặt | 🟡 Medium | ⏳ Roadmap v1.2 |
 
 ---
 
@@ -163,5 +210,6 @@
 
 | Version | Deploy | URL | Note |
 |---------|--------|-----|------|
-| v1.0.0 | 2026-08-25 | https://expense-buddy-app.vercel.app | MVP + Supabase |
+| v1.1.0 | 2026-09-04 | https://expense-buddy-app.vercel.app | Edit Transaction + Custom Settings + Telegram Bot JAVIS + Gemini AI Chatbot |
+| v1.0.0 | 2026-08-25 | https://expense-buddy-app.vercel.app | MVP + Supabase Auth & Cloud |
 | v0.9.0 | 2026-08-24 | *(preview URL)* | LocalStorage MVP |

@@ -1,7 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { generateMockData, STORAGE_KEY, loadData } from './data';
+import {
+  generateMockData,
+  STORAGE_KEY,
+  loadData,
+  DEFAULT_CATEGORIES,
+  DEFAULT_FAMILY_MEMBERS,
+  loadSettingsLocal,
+  saveSettingsLocal,
+  getCategoryInfo,
+  getMemberInfo,
+} from './data';
 import { isSupabaseConfigured, supabase } from './supabase';
 
 const DEFAULT_BUDGET = 35000000;
@@ -29,14 +39,31 @@ export function useExpenseData() {
   const loadCloudData = useCallback(async (currentUser) => {
     setSyncStatus('loading');
     setError('');
-    const [{ data: transactionRows, error: transactionError }, { data: budgetRow, error: budgetError }] = await Promise.all([
+    const [
+      { data: transactionRows, error: transactionError },
+      { data: budgetRow, error: budgetError },
+      { data: settingsRow, error: settingsError },
+    ] = await Promise.all([
       supabase.from('transactions').select('*').order('occurred_at', { ascending: false }),
       supabase.from('budgets').select('monthly_budget').maybeSingle(),
+      supabase.from('user_settings').select('categories, family_members').maybeSingle(),
     ]);
+
+    // Log settings error as warning (table may not exist yet) — non-blocking
+    if (settingsError) {
+      console.warn('user_settings query notice (may not exist yet):', settingsError.message);
+    }
+
     if (transactionError || budgetError) {
       setError(transactionError?.message || budgetError?.message || 'Không thể tải dữ liệu.');
       setSyncStatus('error');
-      setData({ transactions: [], monthlyBudget: DEFAULT_BUDGET });
+      const localSettings = loadSettingsLocal();
+      setData({
+        transactions: [],
+        monthlyBudget: DEFAULT_BUDGET,
+        categories: localSettings?.categories || DEFAULT_CATEGORIES,
+        familyMembers: localSettings?.familyMembers || DEFAULT_FAMILY_MEMBERS,
+      });
       setIsLoaded(true);
       return;
     }
@@ -58,14 +85,38 @@ export function useExpenseData() {
       }
     }
 
-    setData({ transactions, monthlyBudget: Number(budgetRow?.monthly_budget || DEFAULT_BUDGET) });
+    // Load custom categories and family members from cloud or local fallback
+    const localSettings = loadSettingsLocal();
+    const categories = (settingsRow?.categories && Object.keys(settingsRow.categories).length > 0)
+      ? settingsRow.categories
+      : (localSettings?.categories || DEFAULT_CATEGORIES);
+
+    const familyMembers = (Array.isArray(settingsRow?.family_members) && settingsRow.family_members.length > 0)
+      ? settingsRow.family_members
+      : (localSettings?.familyMembers || DEFAULT_FAMILY_MEMBERS);
+
+    // Save cache locally
+    saveSettingsLocal({ categories, familyMembers });
+
+    setData({
+      transactions,
+      monthlyBudget: Number(budgetRow?.monthly_budget || DEFAULT_BUDGET),
+      categories,
+      familyMembers,
+    });
     setSyncStatus('synced');
     setIsLoaded(true);
   }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      setData(generateMockData());
+      const mock = generateMockData();
+      const localSettings = loadSettingsLocal();
+      setData({
+        ...mock,
+        categories: localSettings?.categories || DEFAULT_CATEGORIES,
+        familyMembers: localSettings?.familyMembers || DEFAULT_FAMILY_MEMBERS,
+      });
       setSyncStatus('setup');
       setIsLoaded(true);
       return;
@@ -98,7 +149,78 @@ export function useExpenseData() {
   const addTransaction = useCallback(async (transaction) => {
     const { data: row, error: insertError } = await supabase.from('transactions').insert(toRow(transaction)).select().single();
     if (insertError) throw new Error(insertError.message);
-    setData(prev => ({ ...prev, transactions: [fromRow(row), ...prev.transactions] }));
+    const newTx = fromRow(row);
+
+    let currentCategories = data?.categories;
+    let currentMembers = data?.familyMembers;
+    let currentBudget = data?.monthlyBudget;
+    let currentTotalExpense = 0;
+
+    // Current month key for filtering monthly expenses (matches computeStats)
+    const VN_TZ = 'Asia/Ho_Chi_Minh';
+    const [cyStr, cmStr] = new Date().toLocaleDateString('en-CA', { timeZone: VN_TZ }).split('-');
+    const curMonthKey = `${cyStr}-${cmStr}`;
+
+    setData(prev => {
+      const updatedList = [newTx, ...prev.transactions];
+      currentCategories = prev?.categories;
+      currentMembers = prev?.familyMembers;
+      currentBudget = prev?.monthlyBudget;
+      // Only count current month expenses for accurate budget tracking in Telegram
+      currentTotalExpense = updatedList
+        .filter(t => {
+          if (t.type !== 'expense' || !t.date) return false;
+          try {
+            const [y, m] = new Date(t.date).toLocaleDateString('en-CA', { timeZone: VN_TZ }).split('-');
+            return `${y}-${m}` === curMonthKey;
+          } catch { return false; }
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      return { ...prev, transactions: updatedList };
+    });
+
+    // Auto-send Telegram notification outside React state updater (prevents duplicate triggers)
+    try {
+      const catInfo = getCategoryInfo(newTx.category, newTx.type, currentCategories);
+      const memInfo = getMemberInfo(newTx.member, currentMembers);
+
+      fetch('/api/telegram/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transaction: {
+            ...newTx,
+            categoryName: catInfo.name,
+            memberName: memInfo.name,
+            memberAvatar: memInfo.avatar,
+          },
+          monthlyBudget: currentBudget,
+          totalExpense: currentTotalExpense,
+        }),
+      }).catch(err => console.warn('Telegram notification silent failure:', err));
+    } catch (e) {
+      // silent
+    }
+
+    return newTx;
+  }, [data?.categories, data?.familyMembers, data?.monthlyBudget]);
+
+  const updateTransaction = useCallback(async (id, transaction) => {
+    const row = toRow(transaction);
+    const { data: updatedRow, error: updateError } = await supabase
+      .from('transactions')
+      .update(row)
+      .eq('id', id)
+      .select()
+      .single();
+    if (updateError) throw new Error(updateError.message);
+    const updatedTx = fromRow(updatedRow);
+    setData(prev => ({
+      ...prev,
+      transactions: prev.transactions.map(t => t.id === id ? updatedTx : t),
+    }));
+    return updatedTx;
   }, []);
 
   const deleteTransaction = useCallback(async (id) => {
@@ -113,6 +235,55 @@ export function useExpenseData() {
     setData(prev => ({ ...prev, monthlyBudget: budget }));
   }, [user]);
 
+  const updateCategories = useCallback(async (newCategories) => {
+    const currentMembers = data?.familyMembers || DEFAULT_FAMILY_MEMBERS;
+    setData(prev => ({ ...prev, categories: newCategories }));
+    saveSettingsLocal({
+      categories: newCategories,
+      familyMembers: currentMembers,
+    });
+
+    if (isSupabaseConfigured && user) {
+      try {
+        const { error: setErr } = await supabase.from('user_settings').upsert({
+          user_id: user.id,
+          categories: newCategories,
+          family_members: currentMembers,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+        if (setErr) console.warn('Supabase user_settings update notice:', setErr.message);
+      } catch (err) {
+        console.warn('Failed to upsert user_settings:', err);
+      }
+    }
+  }, [data?.familyMembers, isSupabaseConfigured, user]);
+
+  const updateFamilyMembers = useCallback(async (newMembers) => {
+    if (!Array.isArray(newMembers) || newMembers.length === 0) {
+      throw new Error('Cần giữ lại ít nhất 1 thành viên gia đình.');
+    }
+    const currentCategories = data?.categories || DEFAULT_CATEGORIES;
+    setData(prev => ({ ...prev, familyMembers: newMembers }));
+    saveSettingsLocal({
+      categories: currentCategories,
+      familyMembers: newMembers,
+    });
+
+    if (isSupabaseConfigured && user) {
+      try {
+        const { error: setErr } = await supabase.from('user_settings').upsert({
+          user_id: user.id,
+          categories: currentCategories,
+          family_members: newMembers,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+        if (setErr) console.warn('Supabase user_settings update notice:', setErr.message);
+      } catch (err) {
+        console.warn('Failed to upsert user_settings:', err);
+      }
+    }
+  }, [data?.categories, isSupabaseConfigured, user]);
+
   const resetData = useCallback(async () => {
     const { error: resetError } = await supabase.from('transactions').delete().eq('user_id', user.id);
     if (resetError) throw new Error(resetError.message);
@@ -120,7 +291,11 @@ export function useExpenseData() {
     const { data: rows, error: seedError } = await supabase.from('transactions').insert(fresh.transactions.map(toRow)).select();
     if (seedError) throw new Error(seedError.message);
     await updateBudget(fresh.monthlyBudget);
-    setData({ transactions: rows.map(fromRow), monthlyBudget: fresh.monthlyBudget });
+    setData(prev => ({
+      ...prev,
+      transactions: rows.map(fromRow),
+      monthlyBudget: fresh.monthlyBudget,
+    }));
   }, [updateBudget, user]);
 
   const importData = useCallback(async (imported) => {
@@ -133,15 +308,41 @@ export function useExpenseData() {
       .select();
     if (importError) throw new Error(importError.message);
     if (Number(imported.monthlyBudget) > 0) await updateBudget(Number(imported.monthlyBudget));
+
+    if (imported?.categories && typeof imported.categories === 'object') {
+      await updateCategories(imported.categories);
+    }
+    if (Array.isArray(imported?.familyMembers) && imported.familyMembers.length > 0) {
+      await updateFamilyMembers(imported.familyMembers);
+    }
+
     setData(prev => ({
       ...prev,
       transactions: [...rows.map(fromRow), ...prev.transactions],
       monthlyBudget: Number(imported.monthlyBudget) > 0 ? Number(imported.monthlyBudget) : prev.monthlyBudget,
     }));
     return rows.length;
-  }, [updateBudget]);
+  }, [updateBudget, updateCategories, updateFamilyMembers]);
 
-  return { data, stats: isLoaded && data ? computeStats(data) : null, isLoaded, user, syncStatus, error, isSupabaseConfigured, signInWithEmail, signOut, addTransaction, deleteTransaction, updateBudget, resetData, importData };
+  return {
+    data,
+    stats: isLoaded && data ? computeStats(data) : null,
+    isLoaded,
+    user,
+    syncStatus,
+    error,
+    isSupabaseConfigured,
+    signInWithEmail,
+    signOut,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    updateBudget,
+    resetData,
+    importData,
+    updateCategories,
+    updateFamilyMembers,
+  };
 }
 
 function computeStats(data) {

@@ -12,13 +12,22 @@ const NAV_ITEMS = [
   { id: 'settings', label: 'Cài đặt', icon: Settings },
 ];
 
-export default function Sidebar({ activeView, onViewChange, syncStatus, userEmail, onSignOut }) {
+export default function Sidebar({ activeView, onViewChange, syncStatus, userEmail, familyMembers, onSignOut }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleNav = (id) => {
     onViewChange(id);
     setIsOpen(false);
   };
+
+  const members = familyMembers && familyMembers.length > 0
+    ? familyMembers
+    : [
+        { id: 'bo', name: 'Bố', avatar: '👨' },
+        { id: 'me', name: 'Mẹ', avatar: '👩' },
+        { id: 'bebo', name: 'Bé Bo', avatar: '👦' },
+        { id: 'chung', name: 'Quỹ chung', avatar: '🏠' },
+      ];
 
   return (
     <>
@@ -79,10 +88,16 @@ export default function Sidebar({ activeView, onViewChange, syncStatus, userEmai
         <div className={styles.familySection}>
           <p className={styles.familyLabel}>Thành viên</p>
           <div className={styles.familyAvatars}>
-            <div className={styles.familyMember} title="Bố">👨</div>
-            <div className={styles.familyMember} title="Mẹ">👩</div>
-            <div className={styles.familyMember} title="Bé Bo">👦</div>
-            <div className={styles.familyMember} title="Quỹ chung">🏠</div>
+            {members.map(m => (
+              <div
+                key={m.id}
+                className={styles.familyMember}
+                title={m.name}
+                style={m.color ? { borderColor: m.color } : {}}
+              >
+                {m.avatar}
+              </div>
+            ))}
           </div>
         </div>
 

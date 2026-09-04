@@ -4,29 +4,34 @@ import { useState } from 'react';
 import { CATEGORIES, FAMILY_MEMBERS, formatCurrency } from '../lib/data';
 import {
   UtensilsCrossed, ShoppingCart, Zap, GraduationCap, Heart,
-  Car, ShoppingBag, Gamepad2, MoreHorizontal, Banknote,
-  Gift, TrendingUp, Briefcase, X, Check, Plus,
+  Car, ShoppingBag, Gamepad2, Coffee, Home, Plane,
+  Shirt, Wifi, Dumbbell, Sparkles, Baby, Dog,
+  Film, Music, Banknote, Gift, TrendingUp, Briefcase,
+  Wallet, Coins, MoreHorizontal, X, Check, Plus,
 } from 'lucide-react';
 import styles from './AddTransaction.module.css';
 
 const ICON_MAP = {
   UtensilsCrossed, ShoppingCart, Zap, GraduationCap, Heart,
-  Car, ShoppingBag, Gamepad2, MoreHorizontal, Banknote,
-  Gift, TrendingUp, Briefcase,
+  Car, ShoppingBag, Gamepad2, Coffee, Home, Plane,
+  Shirt, Wifi, Dumbbell, Sparkles, Baby, Dog,
+  Film, Music, Banknote, Gift, TrendingUp, Briefcase,
+  Wallet, Coins, MoreHorizontal,
 };
 
-export default function AddTransaction({ onAdd, onClose }) {
+export default function AddTransaction({ onAdd, onClose, categories: propCategories, familyMembers: propFamilyMembers }) {
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [member, setMember] = useState('');
   const [note, setNote] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }));
   const [showSuccess, setShowSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const categories = CATEGORIES[type];
+  const categories = (propCategories && propCategories[type]) || CATEGORIES[type] || [];
+  const familyMembers = propFamilyMembers && propFamilyMembers.length > 0 ? propFamilyMembers : FAMILY_MEMBERS;
 
   const handleAmountChange = (e) => {
     const raw = e.target.value.replace(/[^\d]/g, '');
@@ -46,7 +51,7 @@ export default function AddTransaction({ onAdd, onClose }) {
         category,
         member,
         note,
-        date: new Date(date).toISOString(),
+        date: new Date(date + 'T12:00:00+07:00').toISOString(),
       });
       setShowSuccess(true);
       setTimeout(() => {
@@ -147,7 +152,7 @@ export default function AddTransaction({ onAdd, onClose }) {
         <div>
           <label className="label">Thành viên</label>
           <div className={styles.memberGrid}>
-            {FAMILY_MEMBERS.map(m => {
+            {familyMembers.map(m => {
               const isSelected = member === m.id;
               return (
                 <button

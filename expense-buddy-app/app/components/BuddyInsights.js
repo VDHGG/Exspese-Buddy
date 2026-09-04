@@ -5,7 +5,7 @@ import { Lightbulb } from 'lucide-react';
 import { getMemberInfo, getCategoryInfo, formatCurrency } from '../lib/data';
 import styles from './BuddyInsights.module.css';
 
-function generateInsights(stats) {
+function generateInsights(stats, categories, familyMembers) {
   if (!stats) return [];
   const insights = [];
 
@@ -13,7 +13,7 @@ function generateInsights(stats) {
   const memberEntries = Object.entries(stats.byMember);
   if (memberEntries.length > 0) {
     const topSpender = [...memberEntries].sort((a, b) => b[1] - a[1])[0];
-    const info = getMemberInfo(topSpender[0]);
+    const info = getMemberInfo(topSpender[0], familyMembers);
     insights.push({
       text: `${info.avatar} ${info.name} chi nhiều nhất tháng này: ${formatCurrency(topSpender[1])}`,
       type: 'info',
@@ -24,7 +24,7 @@ function generateInsights(stats) {
   const catEntries = Object.entries(stats.byCategory);
   if (catEntries.length > 0) {
     const topCat = [...catEntries].sort((a, b) => b[1] - a[1])[0];
-    const info = getCategoryInfo(topCat[0], 'expense');
+    const info = getCategoryInfo(topCat[0], 'expense', categories);
     insights.push({
       text: `Danh mục "${info.name}" chiếm phần lớn chi tiêu (${formatCurrency(topCat[1])})`,
       type: 'warning',
@@ -60,8 +60,11 @@ function generateInsights(stats) {
   return insights;
 }
 
-export default function BuddyInsights({ stats }) {
-  const insights = useMemo(() => generateInsights(stats), [stats]);
+export default function BuddyInsights({ stats, categories, familyMembers }) {
+  const insights = useMemo(
+    () => generateInsights(stats, categories, familyMembers),
+    [stats, categories, familyMembers]
+  );
 
   if (insights.length === 0) return null;
 

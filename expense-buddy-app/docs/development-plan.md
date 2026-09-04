@@ -1,7 +1,7 @@
-﻿# 🗺️ Development Plan
+# 🗺️ Development Plan
 # Expense Buddy — Lộ trình phát triển
 
-> **Hiện tại:** v1.0.0 MVP — Supabase Auth + CRUD + Charts
+> **Hiện tại:** v1.1.0 — Tùy biến danh mục/thành viên + Chỉnh sửa giao dịch + Telegram Bot JAVIS + Gemini AI Chatbot
 > **Nguyên tắc:** Mỗi phase phải ship-able, testable, và không break tính năng cũ
 
 ---
@@ -9,18 +9,29 @@
 ## Tổng quan Roadmap
 
 ```
-v1.0  ████████████████████ Done    — MVP: Auth, CRUD, Charts, Cloud sync
-v1.1  ░░░░░░░░░░░░░░░░░░░░ Planned — Stability & UX Polish
-v1.2  ░░░░░░░░░░░░░░░░░░░░ Planned — Multi-month Analysis
-v2.0  ░░░░░░░░░░░░░░░░░░░░ Future  — Family Sharing & Smart Features
-v3.0  ░░░░░░░░░░░░░░░░░░░░ Vision  — Open Banking & Mobile
+v1.0  ████████████████████ Done (2026-08-25) — MVP: Auth, CRUD, Charts, Cloud sync
+v1.1  ████████████████████ Done (2026-09-04) — Edit Tx, Custom Categories/Members, Telegram JAVIS, Gemini AI
+v1.2  ░░░░░░░░░░░░░░░░░░░░ Planned           — Multi-month Analysis & Trend Reports
+v2.0  ░░░░░░░░░░░░░░░░░░░░ Future            — Multi-user Shared Ledger & Recurring Rules
+v3.0  ░░░░░░░░░░░░░░░░░░░░ Vision            — Open Banking, PWA & Mobile App
 ```
 
 ---
 
-## Phase v1.1 — Stability & UX Polish
-> **Mục tiêu:** Ổn định, không lỗi, trải nghiệm mượt hơn
-> **Ưu tiên:** Cao | **Estimated:** 1–2 tuần
+## Phase v1.1 — Customization, Telegram Bot & AI Assistant (Đã hoàn thành ✅)
+> **Mục tiêu:** Mở rộng trải nghiệm người dùng, thông báo nhóm tức thời, tự động hóa nhập liệu bằng AI
+> **Hoàn thành:** 2026-09-04
+
+### 1.1.0 Core Enhancements & AI Features (Shipped)
+- [x] **Chỉnh sửa giao dịch (Transaction Edit)**: Modal `EditTransactionModal` cho phép sửa loại, số tiền, danh mục, thành viên, ngày, ghi chú.
+- [x] **Tùy biến Danh mục & Thành viên gia đình**: Quản lý trực tiếp trong Cài đặt, đồng bộ `user_settings` trên Supabase với fallback an toàn.
+- [x] **Tích hợp Telegram Bot JAVIS (`@Javisreport_bot`)**: Route an toàn `/api/telegram/notify`, template HTML sắc nét, thông báo tức thời vào nhóm gia đình.
+- [x] **Trợ lý tài chính AI Gemini 2.5 Flash (`FloatingChatWidget`)**:
+  - Giao diện chat nổi glassmorphism hiện đại, quick prompts.
+  - Phân tích chi tiêu, trả lời tư vấn ngân sách dựa trên dữ liệu thực tế.
+  - Nhập liệu thông minh bằng ngôn ngữ tự nhiên (NLP) với bộ fuzzy matching linh hoạt.
+- [x] **Timezone Việt Nam (+7)**: Chuẩn hóa triệt để `Asia/Ho_Chi_Minh` cho cả thêm và sửa giao dịch.
+- [x] **Deep Review & Reliability**: Khắc phục triệt để re-render side-effects, Supabase upsert payload integrity, regex JSON parsing resilience.
 
 ### 1.1.1 Auth & Sync Improvements
 - [ ] **Toast notification system** — thay thế `{status && <p>}` bằng toast đẹp (top-right, auto-dismiss 3s)

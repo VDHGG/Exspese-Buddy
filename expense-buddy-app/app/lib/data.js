@@ -1,32 +1,54 @@
 // Mock data generator & LocalStorage utility for Expense Buddy
 
-const FAMILY_MEMBERS = [
-  { id: 'bo', name: 'Bố', avatar: '👨', color: '#7C3AED' },
-  { id: 'me', name: 'Mẹ', avatar: '👩', color: '#E11D48' },
-  { id: 'bebo', name: 'Bé Bo', avatar: '👦', color: '#F59E0B' },
-  { id: 'chung', name: 'Quỹ chung', avatar: '🏠', color: '#059669' },
+const DEFAULT_FAMILY_MEMBERS = [
+  { id: 'bo', name: 'Bố', avatar: '👨', color: '#7C3AED', isSystem: true },
+  { id: 'me', name: 'Mẹ', avatar: '👩', color: '#E11D48', isSystem: true },
+  { id: 'bebo', name: 'Bé Bo', avatar: '👦', color: '#F59E0B', isSystem: true },
+  { id: 'chung', name: 'Quỹ chung', avatar: '🏠', color: '#059669', isSystem: true },
 ];
 
-const CATEGORIES = {
+const DEFAULT_CATEGORIES = {
   expense: [
-    { id: 'food', name: 'Ăn uống', icon: 'UtensilsCrossed', color: '#F97316' },
-    { id: 'market', name: 'Đi chợ', icon: 'ShoppingCart', color: '#10B981' },
-    { id: 'electric', name: 'Điện nước', icon: 'Zap', color: '#FBBF24' },
-    { id: 'education', name: 'Học phí', icon: 'GraduationCap', color: '#8B5CF6' },
-    { id: 'health', name: 'Y tế', icon: 'Heart', color: '#EF4444' },
-    { id: 'transport', name: 'Di chuyển', icon: 'Car', color: '#3B82F6' },
-    { id: 'shopping', name: 'Mua sắm', icon: 'ShoppingBag', color: '#EC4899' },
-    { id: 'entertainment', name: 'Giải trí', icon: 'Gamepad2', color: '#06B6D4' },
-    { id: 'other_expense', name: 'Khác', icon: 'MoreHorizontal', color: '#6B7280' },
+    { id: 'food', name: 'Ăn uống', icon: 'UtensilsCrossed', color: '#F97316', isSystem: true },
+    { id: 'market', name: 'Đi chợ', icon: 'ShoppingCart', color: '#10B981', isSystem: true },
+    { id: 'electric', name: 'Điện nước', icon: 'Zap', color: '#FBBF24', isSystem: true },
+    { id: 'education', name: 'Học phí', icon: 'GraduationCap', color: '#8B5CF6', isSystem: true },
+    { id: 'health', name: 'Y tế', icon: 'Heart', color: '#EF4444', isSystem: true },
+    { id: 'transport', name: 'Di chuyển', icon: 'Car', color: '#3B82F6', isSystem: true },
+    { id: 'shopping', name: 'Mua sắm', icon: 'ShoppingBag', color: '#EC4899', isSystem: true },
+    { id: 'entertainment', name: 'Giải trí', icon: 'Gamepad2', color: '#06B6D4', isSystem: true },
+    { id: 'other_expense', name: 'Khác', icon: 'MoreHorizontal', color: '#6B7280', isSystem: true },
   ],
   income: [
-    { id: 'salary', name: 'Lương', icon: 'Banknote', color: '#10B981' },
-    { id: 'bonus', name: 'Thưởng', icon: 'Gift', color: '#F59E0B' },
-    { id: 'investment', name: 'Đầu tư', icon: 'TrendingUp', color: '#3B82F6' },
-    { id: 'freelance', name: 'Thu nhập phụ', icon: 'Briefcase', color: '#8B5CF6' },
-    { id: 'other_income', name: 'Khác', icon: 'MoreHorizontal', color: '#6B7280' },
+    { id: 'salary', name: 'Lương', icon: 'Banknote', color: '#10B981', isSystem: true },
+    { id: 'bonus', name: 'Thưởng', icon: 'Gift', color: '#F59E0B', isSystem: true },
+    { id: 'investment', name: 'Đầu tư', icon: 'TrendingUp', color: '#3B82F6', isSystem: true },
+    { id: 'freelance', name: 'Thu nhập phụ', icon: 'Briefcase', color: '#8B5CF6', isSystem: true },
+    { id: 'other_income', name: 'Khác', icon: 'MoreHorizontal', color: '#6B7280', isSystem: true },
   ],
 };
+
+const FAMILY_MEMBERS = DEFAULT_FAMILY_MEMBERS;
+const CATEGORIES = DEFAULT_CATEGORIES;
+
+const AVAILABLE_ICONS = [
+  'UtensilsCrossed', 'ShoppingCart', 'Zap', 'GraduationCap', 'Heart',
+  'Car', 'ShoppingBag', 'Gamepad2', 'Coffee', 'Home',
+  'Plane', 'Shirt', 'Wifi', 'Dumbbell', 'Sparkles',
+  'Baby', 'Dog', 'Film', 'Music', 'Banknote',
+  'Gift', 'TrendingUp', 'Briefcase', 'Wallet', 'Coins', 'MoreHorizontal'
+];
+
+const COLOR_PALETTE = [
+  '#F97316', '#10B981', '#FBBF24', '#8B5CF6', '#EF4444',
+  '#3B82F6', '#EC4899', '#06B6D4', '#14B8A6', '#6B7280'
+];
+
+const AVATAR_OPTIONS = [
+  '👨', '👩', '👦', '👧', '👶', '👴', '👵', '🧑', '👱‍♂️', '👱‍♀️', '🏠', '🐱', '🐶'
+];
+
+const SETTINGS_STORAGE_KEY = 'expense-buddy-settings';
 
 const STORAGE_KEY = 'expense-buddy-data';
 
@@ -169,24 +191,85 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
-function getCategoryInfo(categoryId, type) {
-  const cats = CATEGORIES[type] || CATEGORIES.expense;
-  return cats.find(c => c.id === categoryId) || cats[cats.length - 1];
+function loadSettingsLocal() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load local settings:', e);
+  }
+  return null;
 }
 
-function getMemberInfo(memberId) {
-  return FAMILY_MEMBERS.find(m => m.id === memberId) || FAMILY_MEMBERS[0];
+function saveSettingsLocal(settings) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch (e) {
+    console.error('Failed to save local settings:', e);
+  }
+}
+
+function getCategoryInfo(categoryId, type, customCategories = null) {
+  const catsSource = customCategories || CATEGORIES;
+  const cats = (catsSource && catsSource[type]) ? catsSource[type] : (catsSource?.expense || DEFAULT_CATEGORIES.expense);
+  const found = cats.find(c => c.id === categoryId);
+  if (found) return found;
+
+  // Search across other type
+  const otherType = type === 'expense' ? 'income' : 'expense';
+  const otherCats = (catsSource && catsSource[otherType]) ? catsSource[otherType] : (catsSource?.[otherType] || DEFAULT_CATEGORIES[otherType]);
+  const foundOther = otherCats ? otherCats.find(c => c.id === categoryId) : null;
+  if (foundOther) return foundOther;
+
+  // Search in default categories
+  const defCats = DEFAULT_CATEGORIES[type] || DEFAULT_CATEGORIES.expense;
+  const foundDef = defCats.find(c => c.id === categoryId);
+  if (foundDef) return foundDef;
+
+  // Fallback gracefully without overriding name
+  return {
+    id: categoryId,
+    name: categoryId,
+    icon: 'MoreHorizontal',
+    color: '#6B7280',
+  };
+}
+
+function getMemberInfo(memberId, customMembers = null) {
+  const members = customMembers && customMembers.length > 0 ? customMembers : FAMILY_MEMBERS;
+  const found = members.find(m => m.id === memberId);
+  if (found) return found;
+
+  const foundDef = DEFAULT_FAMILY_MEMBERS.find(m => m.id === memberId);
+  if (foundDef) return foundDef;
+
+  return {
+    id: memberId,
+    name: memberId,
+    avatar: '👤',
+    color: '#6B7280',
+  };
 }
 
 export {
+  DEFAULT_FAMILY_MEMBERS,
+  DEFAULT_CATEGORIES,
   FAMILY_MEMBERS,
   CATEGORIES,
+  AVAILABLE_ICONS,
+  COLOR_PALETTE,
+  AVATAR_OPTIONS,
   STORAGE_KEY,
+  SETTINGS_STORAGE_KEY,
   DATA_TTL_MS,
   TIMEZONE,
   generateMockData,
   loadData,
   saveData,
+  loadSettingsLocal,
+  saveSettingsLocal,
   initializeData,
   getRemainingTTL,
   formatCurrency,

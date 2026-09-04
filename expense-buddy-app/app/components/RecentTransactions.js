@@ -4,7 +4,7 @@ import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { getCategoryInfo, getMemberInfo, formatCurrency, formatDate } from '../lib/data';
 import styles from './RecentTransactions.module.css';
 
-export default function RecentTransactions({ stats, onViewAll }) {
+export default function RecentTransactions({ stats, categories, familyMembers, onViewAll }) {
   if (!stats || !stats.recent) return null;
 
   return (
@@ -18,8 +18,8 @@ export default function RecentTransactions({ stats, onViewAll }) {
       </div>
       <div className={styles.list}>
         {stats.recent.slice(0, 7).map((t, i) => {
-          const catInfo = getCategoryInfo(t.category, t.type);
-          const memberInfo = getMemberInfo(t.member);
+          const catInfo = getCategoryInfo(t.category, t.type, categories);
+          const memberInfo = getMemberInfo(t.member, familyMembers);
           const isExpense = t.type === 'expense';
 
           return (

@@ -6,7 +6,7 @@
 2. Vào **SQL Editor** → **New query**.
 3. Mở file `supabase/schema.sql` trong project này, copy toàn bộ và bấm **Run**.
 
-Kết quả: bạn sẽ có bảng `transactions` và `budgets`. Mỗi tài khoản chỉ thấy dữ liệu của chính mình.
+Kết quả: bạn sẽ có các bảng `transactions`, `budgets`, và `user_settings`. Mỗi tài khoản chỉ thấy dữ liệu của chính mình thông qua Row Level Security (RLS).
 
 ## 2. Bật đăng nhập bằng email
 

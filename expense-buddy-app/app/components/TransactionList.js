@@ -1,17 +1,21 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Trash2, Search, Filter, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { getCategoryInfo, getMemberInfo, formatCurrency, formatDate, formatFullDate, FAMILY_MEMBERS, CATEGORIES } from '../lib/data';
+import { Trash2, Pencil, Search, Filter, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { getCategoryInfo, getMemberInfo, formatCurrency, formatDate, formatFullDate, DEFAULT_FAMILY_MEMBERS, DEFAULT_CATEGORIES } from '../lib/data';
+import EditTransactionModal from './EditTransactionModal';
 import styles from './TransactionList.module.css';
 
-export default function TransactionList({ data, onDelete }) {
+export default function TransactionList({ data, onDelete, onUpdate }) {
   const [search, setSearch] = useState('');
   const [filterMember, setFilterMember] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterType, setFilterType] = useState('all');
+  const [editingTx, setEditingTx] = useState(null);
 
   const transactions = data?.transactions || [];
+  const categories = data?.categories || DEFAULT_CATEGORIES;
+  const familyMembers = data?.familyMembers || DEFAULT_FAMILY_MEMBERS;
 
   const filtered = useMemo(() => {
     let result = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -20,7 +24,7 @@ export default function TransactionList({ data, onDelete }) {
       const s = search.toLowerCase();
       result = result.filter(t =>
         t.note?.toLowerCase().includes(s) ||
-        getCategoryInfo(t.category, t.type).name.toLowerCase().includes(s)
+        getCategoryInfo(t.category, t.type, categories).name.toLowerCase().includes(s)
       );
     }
     if (filterMember !== 'all') {
@@ -33,9 +37,12 @@ export default function TransactionList({ data, onDelete }) {
       result = result.filter(t => t.type === filterType);
     }
     return result;
-  }, [transactions, search, filterMember, filterCategory, filterType]);
+  }, [transactions, search, filterMember, filterCategory, filterType, categories]);
 
-  const allCategories = [...CATEGORIES.expense, ...CATEGORIES.income];
+  const allCategories = [
+    ...(categories?.expense || []),
+    ...(categories?.income || [])
+  ];
 
   return (
     <div className={styles.container}>
@@ -64,7 +71,7 @@ export default function TransactionList({ data, onDelete }) {
           </select>
           <select className="select" value={filterMember} onChange={(e) => setFilterMember(e.target.value)}>
             <option value="all">Tất cả thành viên</option>
-            {FAMILY_MEMBERS.map(m => (
+            {familyMembers.map(m => (
               <option key={m.id} value={m.id}>{m.avatar} {m.name}</option>
             ))}
           </select>
@@ -86,8 +93,8 @@ export default function TransactionList({ data, onDelete }) {
           </div>
         ) : (
           filtered.map((t, i) => {
-            const catInfo = getCategoryInfo(t.category, t.type);
-            const memberInfo = getMemberInfo(t.member);
+            const catInfo = getCategoryInfo(t.category, t.type, categories);
+            const memberInfo = getMemberInfo(t.member, familyMembers);
             const isExpense = t.type === 'expense';
 
             return (
@@ -118,20 +125,41 @@ export default function TransactionList({ data, onDelete }) {
                   <span className={`${styles.itemAmount} ${isExpense ? styles.amountExpense : styles.amountIncome}`}>
                     {isExpense ? '-' : '+'}{formatCurrency(t.amount)}
                   </span>
-                  <button
-                    className={styles.deleteBtn}
-                    onClick={() => onDelete(t.id)}
-                    aria-label="Xóa giao dịch"
-                    title="Xóa"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className={styles.itemActions}>
+                    <button
+                      className={styles.editBtn}
+                      onClick={() => setEditingTx(t)}
+                      aria-label="Sửa giao dịch"
+                      title="Sửa"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => onDelete(t.id)}
+                      aria-label="Xóa giao dịch"
+                      title="Xóa"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })
         )}
       </div>
+
+      {/* Edit Modal */}
+      {editingTx && (
+        <EditTransactionModal
+          transaction={editingTx}
+          categories={categories}
+          familyMembers={familyMembers}
+          onSave={onUpdate}
+          onClose={() => setEditingTx(null)}
+        />
+      )}
     </div>
   );
 }

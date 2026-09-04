@@ -11,6 +11,7 @@ import RecentTransactions from './components/RecentTransactions';
 import BuddyInsights from './components/BuddyInsights';
 import SettingsView from './components/SettingsView';
 import AuthGate from './components/AuthGate';
+import FloatingChatWidget from './components/FloatingChatWidget';
 import { formatMonthYear } from './lib/data';
 import styles from './page.module.css';
 
@@ -21,6 +22,7 @@ export default function Home() {
     stats,
     isLoaded,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
     updateBudget,
     resetData,
@@ -31,6 +33,8 @@ export default function Home() {
     signInWithEmail,
     signOut,
     importData,
+    updateCategories,
+    updateFamilyMembers,
   } = useExpenseData();
 
   if (!isLoaded) {
@@ -45,6 +49,9 @@ export default function Home() {
   if (!user) {
     return <AuthGate configured={isSupabaseConfigured} onSignIn={signInWithEmail} />;
   }
+
+  const categories = data?.categories;
+  const familyMembers = data?.familyMembers;
 
   const renderView = () => {
     switch (activeView) {
@@ -75,10 +82,19 @@ export default function Home() {
             {/* Bottom grid */}
             <div className={styles.bottomGrid}>
               <div className={styles.bottomLeft}>
-                <RecentTransactions stats={stats} onViewAll={() => setActiveView('history')} />
+                <RecentTransactions
+                  stats={stats}
+                  categories={categories}
+                  familyMembers={familyMembers}
+                  onViewAll={() => setActiveView('history')}
+                />
               </div>
               <div className={styles.bottomRight}>
-                <BuddyInsights stats={stats} />
+                <BuddyInsights
+                  stats={stats}
+                  categories={categories}
+                  familyMembers={familyMembers}
+                />
               </div>
             </div>
           </div>
@@ -90,6 +106,8 @@ export default function Home() {
             <div className={`card ${styles.addCard}`}>
               <AddTransaction
                 onAdd={addTransaction}
+                categories={categories}
+                familyMembers={familyMembers}
                 onClose={() => setActiveView('dashboard')}
               />
             </div>
@@ -100,14 +118,23 @@ export default function Home() {
         return (
           <div className={styles.viewContainer}>
             <h2 className={styles.viewTitle}>Biểu đồ phân tích</h2>
-            <Charts stats={stats} />
+            <Charts
+              stats={stats}
+              categories={categories}
+              familyMembers={familyMembers}
+              transactions={data?.transactions}
+            />
           </div>
         );
 
       case 'history':
         return (
           <div className={styles.viewContainer}>
-            <TransactionList data={data} onDelete={deleteTransaction} />
+            <TransactionList
+              data={data}
+              onDelete={deleteTransaction}
+              onUpdate={updateTransaction}
+            />
           </div>
         );
 
@@ -119,6 +146,8 @@ export default function Home() {
               onUpdateBudget={updateBudget}
               onReset={resetData}
               onImport={importData}
+              onUpdateCategories={updateCategories}
+              onUpdateFamilyMembers={updateFamilyMembers}
             />
           </div>
         );
@@ -135,12 +164,18 @@ export default function Home() {
         onViewChange={setActiveView}
         syncStatus={syncStatus}
         userEmail={user.email}
+        familyMembers={familyMembers}
         onSignOut={signOut}
       />
       <main className={styles.mainContent}>
         {error && <p className={styles.syncError}>Lỗi đồng bộ: {error}</p>}
         {renderView()}
       </main>
+      <FloatingChatWidget
+        data={data}
+        stats={stats}
+        onAddTransaction={addTransaction}
+      />
     </div>
   );
 }

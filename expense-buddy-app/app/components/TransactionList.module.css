@@ -143,6 +143,13 @@
 .amountExpense { color: #E11D48; }
 .amountIncome { color: #059669; }
 
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editBtn,
 .deleteBtn {
   width: 30px;
   height: 30px;
@@ -157,12 +164,27 @@
   transition: all 0.15s ease;
   opacity: 0;
 }
+
+.item:hover .editBtn,
 .item:hover .deleteBtn {
   opacity: 1;
 }
+
+.editBtn:hover {
+  background: #FFF8F0;
+  color: #D97706;
+}
+
 .deleteBtn:hover {
   background: #FFF1F2;
   color: #E11D48;
+}
+
+@media (max-width: 768px) {
+  .editBtn,
+  .deleteBtn {
+    opacity: 1;
+  }
 }
 
 /* Empty */
