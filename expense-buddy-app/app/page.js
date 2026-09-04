@@ -12,11 +12,14 @@ import BuddyInsights from './components/BuddyInsights';
 import SettingsView from './components/SettingsView';
 import AuthGate from './components/AuthGate';
 import FloatingChatWidget from './components/FloatingChatWidget';
+import TopUpModal from './components/TopUpModal';
+import { QrCode } from 'lucide-react';
 import { formatMonthYear } from './lib/data';
 import styles from './page.module.css';
 
 export default function Home() {
   const [activeView, setActiveView] = useState('dashboard');
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const {
     data,
     stats,
@@ -26,6 +29,7 @@ export default function Home() {
     deleteTransaction,
     updateBudget,
     resetData,
+    reloadCloudData,
     user,
     syncStatus,
     error,
@@ -68,12 +72,29 @@ export default function Home() {
                   Tổng quan chi tiêu gia đình {formatMonthYear(new Date())}
                 </p>
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={() => setActiveView('add')}
-              >
-                + Thêm giao dịch
-              </button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setIsTopUpOpen(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: '#ecfdf5',
+                    color: '#059669',
+                    border: '1.5px solid #a7f3d0',
+                    fontWeight: 600,
+                  }}
+                >
+                  <QrCode size={18} /> Nạp Quỹ VietQR
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setActiveView('add')}
+                >
+                  + Thêm giao dịch
+                </button>
+              </div>
             </div>
 
             {/* KPI Cards */}
@@ -175,6 +196,14 @@ export default function Home() {
         data={data}
         stats={stats}
         onAddTransaction={addTransaction}
+      />
+      <TopUpModal
+        isOpen={isTopUpOpen}
+        onClose={() => setIsTopUpOpen(false)}
+        user={user}
+        onPaymentSuccess={() => {
+          reloadCloudData();
+        }}
       />
     </div>
   );

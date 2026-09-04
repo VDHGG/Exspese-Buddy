@@ -2,8 +2,8 @@
 # Expense Buddy — Nhật ký tiến độ phát triển
 
 > Cập nhật lần cuối: **2026-09-04**
-> Trạng thái hiện tại: **v1.1 Live ✅** — Tích hợp Telegram Bot JAVIS & Gemini AI Assistant
-> Deployed: 2026-09-04T19:03 (Production — Email + Password Auth Support)
+> Trạng thái hiện tại: **v1.2 Live 🚀** — Tích hợp Thanh toán VietQR & Webhook Realtime với payOS
+> Deployed: 2026-09-04T21:48 (Production — payOS Payment Gateway & Webhooks)
 
 ---
 

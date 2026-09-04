@@ -130,13 +130,40 @@ export function useExpenseData() {
       else { setData(null); setSyncStatus('signed-out'); setIsLoaded(true); }
     };
     initialize();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
       setUser(session?.user || null);
       if (session?.user) loadCloudData(session.user);
       else { setData(null); setSyncStatus('signed-out'); setIsLoaded(true); }
     });
-    return () => { mounted = false; subscription.unsubscribe(); };
+
+    // Supabase Realtime subscription for instant updates on webhook insert
+    const realtimeChannel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'transactions' },
+        (payload) => {
+          if (!mounted || !payload?.new) return;
+          const newTx = fromRow(payload.new);
+          setData(prev => {
+            if (!prev) return prev;
+            if (prev.transactions.some(t => t.id === newTx.id)) return prev;
+            return {
+              ...prev,
+              transactions: [newTx, ...prev.transactions],
+            };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      supabase.removeChannel(realtimeChannel);
+    };
   }, [loadCloudData]);
 
   const signInWithPassword = useCallback(async (email, password) => {
@@ -345,6 +372,7 @@ export function useExpenseData() {
     deleteTransaction,
     updateBudget,
     resetData,
+    reloadCloudData: () => user && loadCloudData(user),
     importData,
     updateCategories,
     updateFamilyMembers,
